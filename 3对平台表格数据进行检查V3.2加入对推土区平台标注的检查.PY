@@ -219,7 +219,7 @@ def update_bghcyj_gfx(feature_class):
 
             # 3. 检查DLBM不以'03%'开头，而HSDLBM以'03%'开头的情况
             if not dlbm_value.startswith("03") and hsd_lbm_value.startswith("03"):
-                bg_hs_value = "林地流入图斑，需人工核查；"
+                bg_hs_value += "林地流入图斑，需人工核查；"
             
             # 4. 筛选出PDYJ为“三上”的图斑，在BGHS内加入内容：认定为三上成果需人工核实
             if pdyj_value == "2023年三上":
