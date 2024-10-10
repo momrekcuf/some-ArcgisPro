@@ -149,14 +149,6 @@ def process_feature_class(fc):
                     else:
                         row[7] = '未经举证判读为国家预判的QT类'
                 cursor.updateRow(row)
-        
-            # 规则5：检查pdyj为"2023年一上"或"林草湿监测"或"国家内业预判"时，pdyj的优先级是否填写准确
-            if pdyj in ['2023年一上', '林草湿监测', '国家内业预判'] and pdyj_check != pdyj:
-                if row[7]:
-                    row[7] += '；请核实PDYJ的优先级是否填写准确'
-                else:
-                    row[7] = '请核实PDYJ的优先级是否填写准确'
-                cursor.updateRow(row)
 
     arcpy.AddMessage(f"要素类 {fc} 已完成检查")
 
