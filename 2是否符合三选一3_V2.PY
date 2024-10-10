@@ -152,6 +152,27 @@ def process_feature_class(fc):
 
     arcpy.AddMessage(f"要素类 {fc} 已完成检查")
 
+# 检查 PDYJ 优先级
+def check_pdyj_priority(fc):
+    arcpy.AddMessage(f"正在检查PDYJ优先级：{fc}")
+    
+    with arcpy.da.UpdateCursor(fc, [field_pdyj, field_pdyj_check, field_hcyj]) as cursor:
+        for row in cursor:
+            pdyj = row[0]
+            pdyj_check = row[1]
+            hcyj = row[2]
+
+            # 检查 PDYJ 优先级并更新核查意见字段
+            if pdyj in ['2023年一上', '林草湿监测', '国家内业预判'] and pdyj_check != pdyj:
+                if hcyj and hcyj.strip():  
+                    hcyj += '；请核实PDYJ的优先级是否填写准确'
+                else:  
+                    hcyj = '请核实PDYJ的优先级是否填写准确'
+                row[2] = hcyj  # 更新核查意见字段
+                cursor.updateRow(row)
+
+    arcpy.AddMessage(f"PDYJ优先级检查完成：{fc}")
+
 # 遍历工作空间中的所有文件夹和子文件夹
 def process_workspace(workspace):
     for root, dirs, files in os.walk(workspace):
@@ -164,11 +185,13 @@ def process_workspace(workspace):
             feature_classes = arcpy.ListFeatureClasses()
             for fc in feature_classes:
                 process_feature_class(fc)
+                check_pdyj_priority(fc)
 
         # 处理shp文件
         shp_files = [os.path.join(root, f) for f in files if f.endswith('.shp')]
         for shp in shp_files:
             process_feature_class(shp)
+            check_pdyj_priority(shp)
 
 # 执行主程序
 if __name__ == '__main__':
