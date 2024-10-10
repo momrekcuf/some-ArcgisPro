@@ -227,7 +227,7 @@ def update_bghcyj_gfx(feature_class):
             
             # 5. 检查平台举证和PDYJ标注举证的一致性，更新BGHCYJ_GFX
             if (bgjzzt_value == "已外业" and pdyj_value != "双方举证认定") or (bgjzzt_value == "未外业" and pdyj_value == "双方举证认定"):
-                bg_hcyj_gfx_value += "举证标注与平台已举证不匹配；"
+                bg_hcyj_gfx_value += "PDYJ举证标注与平台已举证不匹配；"
             
             # 6. 检查平台推土区是否按矢量备注
             if ttq_value == "TD" and (not bggzsm_value or bggzsm_value.strip() == ''):  # 检查TTQ字段是否为"TD",同时检查BGGZSM是否为空、空白或空格
