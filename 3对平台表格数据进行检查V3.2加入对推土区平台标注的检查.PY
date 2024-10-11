@@ -127,7 +127,7 @@ def calculate_bgdlbm(feature_class):
             elif bggzjg_value == "认定国家内业预判成果":
                 row[3] = gjn_dl_value if pd.notna(gjn_dl_value) else ""
             elif bggzjg_value == "不认定":
-                row[3] = bggzdl_value[:4] if pd.notna(bggzdl_value) else ""
+                row[3] = bggzdl_value.split('-')[0] if pd.notna(bggzdl_value) else ""
 
             cursor.updateRow(row)
     arcpy.AddMessage("BGDLBM字段计算完成")
