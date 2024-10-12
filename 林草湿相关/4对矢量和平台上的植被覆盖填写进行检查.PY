@@ -106,21 +106,43 @@ def check_zbfg(fc):
 
     arcpy.AddMessage(f"要素类处理完成，并输出结果到ZBFGJC_GFX字段：{fc}")
 
-# 调用输入的文件夹
-workspace = arcpy.GetParameterAsText(0)  
-arcpy.env.workspace = workspace
+# 获取输入类型
+input_type = arcpy.GetParameterAsText(0)
 
-# 遍历工作空间中的所有文件夹和子文件夹
-for root, dirs, files in os.walk(workspace):
-    # 处理gdb中的要素类
-    gdbs = [os.path.join(root, d) for d in dirs if d.endswith('.gdb')]
-    for gdb in gdbs:
-        arcpy.env.workspace = gdb
+# 处理逻辑
+if arcpy.Exists(input_type):
+    desc = arcpy.Describe(input_type)
+
+    # 如果是要素类，直接处理
+    if desc.dataType == "FeatureClass":
+        check_zbfg(input_type)
+
+    # 如果是 .gdb 文件，遍历其中的要素类
+    elif desc.dataType == "Workspace" and input_type.endswith('.gdb'):
+        arcpy.env.workspace = input_type
         feature_classes = arcpy.ListFeatureClasses()
         for fc in feature_classes:
             check_zbfg(fc)
 
-    # 处理shp文件
-    shp_files = [os.path.join(root, f) for f in files if f.endswith('.shp')]
-    for shp in shp_files:
-        check_zbfg(shp)
+    # 如果是 .shp 文件，直接处理该文件
+    elif input_type.endswith('.shp'):
+        check_zbfg(input_type)
+
+    # 如果是文件夹，遍历其中的要素类和shp文件
+    elif desc.dataType == "Folder":
+        for root, dirs, files in os.walk(input_type):
+            # 处理GDB文件
+            gdbs = [os.path.join(root, d) for d in dirs if d.endswith('.gdb')]
+            for gdb in gdbs:
+                arcpy.env.workspace = gdb
+                feature_classes = arcpy.ListFeatureClasses()
+                for fc in feature_classes:
+                    check_zbfg(fc)
+
+            # 处理shp文件
+            shp_files = [os.path.join(root, f) for f in files if f.endswith('.shp')]
+            for shp in shp_files:
+                check_zbfg(shp)
+
+else:
+    arcpy.AddError(f"输入路径 {input_type} 不存在")
