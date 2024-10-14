@@ -24,7 +24,8 @@ def add_fields(feature_class):
         ("BGHS", "TEXT", 250),
         ("BGHCYJ_GFX", "TEXT", 250),
         ("TJGJ", "TEXT", 100),
-        ("TJCTBH", "TEXT", 100)
+        ("TJCTBH", "TEXT", 100),
+        ("SHJD", "TEXT", 100)
     ]
 
     for field in fields:
@@ -58,7 +59,7 @@ def match_and_update_fields(feature_class, excel_df, bu_column_index):
 
     with arcpy.da.UpdateCursor(feature_class, [
         "CTBH", "BGJZZT", "BGLYJG", "BGLYDL", "BGLYZBFG", "BGGZJG", "BGGZDL", 
-        "BGGZJZLX", "BGGZSM", "BGGZWHS", "BGHS"
+        "BGGZJZLX", "BGGZSM", "BGGZWHS", "BGHS", "SHJD"
     ]) as cursor:
         for row in cursor:
             ctbh_value = row[0]
@@ -77,6 +78,7 @@ def match_and_update_fields(feature_class, excel_df, bu_column_index):
                 row[7] = excel_df.iloc[match_index, 31] if pd.notna(excel_df.iloc[match_index, 31]) else ""
                 row[8] = excel_df.iloc[match_index, 32] if pd.notna(excel_df.iloc[match_index, 32]) else ""
                 row[9] = excel_df.iloc[match_index, 33] if pd.notna(excel_df.iloc[match_index, 33]) else ""
+                row[11] = excel_df.iloc[match_index, 61] if pd.notna(excel_df.iloc[match_index, 61]) else ""
 
                 # 更新BGHS字段为匹配
                 row[10] = "匹配"
@@ -274,7 +276,7 @@ def update_tjgj_and_tjctbh(feature_class):
 
             # 1. 筛选条件检查
             if (not bg_hcyj_gfx_value or bg_hcyj_gfx_value.strip() == '') and (not hcyj_gfx_value or hcyj_gfx_value.strip() == '') and pdyj_value in ('2023年一上', '国家内业预判', '林草湿监测') and pdyj_jc_value == pdyj_value and bg_hs_value == '匹配':
-                row[5] = "报国家批次一"  # 更新TJGJ字段
+                row[5] = "地类认定通过可报国家（植被覆盖填写情况未核查）"  # 更新TJGJ字段
 
                 # 更新TJCTBH字段
                 if tbfgbz_value and tbfgbz_value.startswith("草图"):
