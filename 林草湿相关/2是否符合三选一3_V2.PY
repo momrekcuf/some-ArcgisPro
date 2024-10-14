@@ -162,6 +162,16 @@ def check_pdyj_priority(fc):
             pdyj_check = row[1]
             hcyj = row[2]
 
+            # 检查 PDYJ 为 '2023年一上'、'自主新增图斑'，是否填写准确
+            if pdyj in ['2023年一上', '自主新增图斑'] and pdyj_check != pdyj:
+                if hcyj and hcyj.strip():
+                    hcyj += '；请核实PDYJ填写是否准确'
+                else:
+                    hcyj = '请核实PDYJ填写是否准确'
+                row[2] = hcyj  # 更新核查意见字段
+                cursor.updateRow(row)
+                continue  # 跳过后续检查
+
             # 检查 PDYJ 优先级并更新核查意见字段
             if pdyj in ['2023年一上', '林草湿监测', '国家内业预判', '2023年三上'] and pdyj_check != pdyj:
                 if hcyj and hcyj.strip():  
