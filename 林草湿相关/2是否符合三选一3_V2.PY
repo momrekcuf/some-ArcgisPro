@@ -61,7 +61,7 @@ def process_feature_class(fc):
                 continue  # 跳过后续规则
 
             # 规则1: “2023年一上”的一致性核实情况，PDYJ不包含“双方举证认定”或“2023年三上”
-            if not pdyj_check and hsdlbm == dlbm and pdyj not in ['双方举证认定', '2023年三上','自主新增图斑']:
+            if not pdyj_check and hsdlbm == dlbm and pdyj not in ['双方举证认定', '自主新增图斑']:
                 row[6] = '2023年一上'
                 cursor.updateRow(row)
                 continue  # 跳过后续规则
@@ -163,7 +163,7 @@ def check_pdyj_priority(fc):
             hcyj = row[2]
 
             # 检查 PDYJ 优先级并更新核查意见字段
-            if pdyj in ['2023年一上', '林草湿监测', '国家内业预判'] and pdyj_check != pdyj:
+            if pdyj in ['2023年一上', '林草湿监测', '国家内业预判', '2023年三上'] and pdyj_check != pdyj:
                 if hcyj and hcyj.strip():  
                     hcyj += '；请核实PDYJ的优先级是否填写准确'
                 else:  
