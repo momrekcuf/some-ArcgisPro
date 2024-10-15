@@ -1,5 +1,17 @@
 import arcpy
 import os
+import re
+
+# 规范化文件名的函数
+def normalize_name(name):
+    # 如果文件名以数字开头，在前面加上 "T"
+    if re.match(r'^\d', name):
+        name = 'T' + name
+    
+    # 保留中文字符，字母、数字和下划线，替换其他非法符号
+    name = re.sub(r'[^\u4e00-\u9fffa-zA-Z0-9_]', '_', name)
+    
+    return name
 
 def main(folder_path, new_gdb_path):
     # 创建新的 GDB（如果不存在）
@@ -19,9 +31,14 @@ def main(folder_path, new_gdb_path):
                 shp_path = os.path.join(root, file)
                 target_feature_class = os.path.join(new_gdb_path, os.path.splitext(file)[0])
                 
+                # 规范化文件名
+                normalized_name = normalize_name(os.path.splitext(file)[0])
+                target_feature_class = os.path.join(new_gdb_path, normalized_name)
+
                 # 覆盖目标中同名要素类
                 if arcpy.Exists(target_feature_class):
                     arcpy.AddMessage(f"覆盖存在的要素类: {target_feature_class}")
+                
                 arcpy.CopyFeatures_management(shp_path, target_feature_class)
                 arcpy.AddMessage(f"已复制 .shp: {shp_path} 到 {new_gdb_path}")
 
