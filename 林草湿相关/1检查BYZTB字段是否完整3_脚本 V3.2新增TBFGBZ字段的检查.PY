@@ -193,13 +193,15 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
                 row[0] = round(area, 2)  # 保留两位小数
                 cursor.updateRow(row)
 
-        # 汇总 TBMJ_JC 的总面积
+        # 汇总 TBMJ_JC 的总面积，并统计个数
         total_area = 0
+        count = 0
         with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC']) as cursor:
             for row in cursor:
                 total_area += row[0] if row[0] is not None else 0
+                count += 1
 
-        add_message_to_log(f"提交图斑面积总计 {total_area} 亩。\n")
+        add_message_to_log(f"提交图斑面积总计 {round(total_area ,2)} 亩，共有{count} 个图斑。\n")
 
         # 汇总根据 DLBM 和 HSDLBM 的条件
         areas = {
@@ -210,9 +212,19 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
         "林地流出": 0,
         "耕地流入": 0,
         "耕地流出": 0
-    }
+        }
 
-    # 第一遍循环：计算与变更调查一致的面积
+        counts = {
+            "一致": 0,
+            "不一致": 0,
+            "林地二级类变化": 0,
+            "林地流入": 0,
+            "林地流出": 0,
+            "耕地流入": 0,
+            "耕地流出": 0
+        }
+
+    # 第一遍循环：计算与变更调查一致的面积和个数
     with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC', 'DLBM', 'HSDLBM']) as cursor:
         for row in cursor:
             tbmj_jc = row[0] if row[0] is not None else 0
@@ -222,8 +234,9 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
             # 与变更调查一致
             if dlbm == hsdlbm:
                 areas["一致"] += tbmj_jc
+                counts["一致"] += 1
 
-    # 第二遍循环：计算与变更调查不一致的面积
+    # 第二遍循环：计算与变更调查不一致的
     with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC', 'DLBM', 'HSDLBM']) as cursor:
         for row in cursor:
             tbmj_jc = row[0] if row[0] is not None else 0
@@ -233,6 +246,7 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
             # 与变更调查不一致
             if dlbm != hsdlbm:
                 areas["不一致"] += tbmj_jc
+                counts["不一致"] += 1
 
     # 第三遍循环：计算林地二级类变化
     with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC', 'DLBM', 'HSDLBM']) as cursor:
@@ -244,6 +258,7 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
             # 林地二级类变化
             if dlbm != hsdlbm and dlbm.startswith('03') and hsdlbm.startswith('03'):
                 areas["林地二级类变化"] += tbmj_jc
+                counts["林地二级类变化"] += 1
 
     # 第四遍循环：计算林地流入
     with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC', 'DLBM', 'HSDLBM']) as cursor:
@@ -255,6 +270,7 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
             # 林地流入
             if not dlbm.startswith('03') and hsdlbm.startswith('03'):
                 areas["林地流入"] += tbmj_jc
+                counts["林地流入"] += 1
 
     # 第五遍循环：计算林地流出
     with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC', 'DLBM', 'HSDLBM']) as cursor:
@@ -266,6 +282,7 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
             # 林地流出
             if dlbm.startswith('03') and not hsdlbm.startswith('03'):
                 areas["林地流出"] += tbmj_jc
+                counts["林地流出"] += 1
 
     # 第六遍循环：计算耕地流入
     with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC', 'DLBM', 'HSDLBM']) as cursor:
@@ -277,6 +294,7 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
             # 耕地流入
             if not dlbm.startswith('01') and hsdlbm.startswith('01'):
                 areas["耕地流入"] += tbmj_jc
+                counts["耕地流入"] += 1
 
     # 第七遍循环：计算耕地流出
     with arcpy.da.SearchCursor(feature_class, ['TBMJ_JC', 'DLBM', 'HSDLBM']) as cursor:
@@ -288,14 +306,15 @@ with open(txt_file_path, 'w', encoding='utf-8') as txt_file:
             # 耕地流出
             if dlbm.startswith('01') and not hsdlbm.startswith('01'):
                 areas["耕地流出"] += tbmj_jc
+                counts["耕地流出"] += 1
 
         # 输出汇总结果
-        add_message_to_log(f"与变更调查一致的面积为 {areas['一致']} 亩。")
-        add_message_to_log(f"与变更调查不一致的面积为 {areas['不一致']} 亩。")
-        add_message_to_log(f"林地二级类变化为 {areas['林地二级类变化']} 亩。")
-        add_message_to_log(f"林地流入 {areas['林地流入']} 亩。")
-        add_message_to_log(f"林地流出 {areas['林地流出']} 亩。")
-        add_message_to_log(f"耕地流入 {areas['耕地流入']} 亩。")
-        add_message_to_log(f"耕地流出 {areas['耕地流出']} 亩。")
+        add_message_to_log(f"与变更调查一致的面积为 {round(areas['一致'], 2)} 亩，共有 {counts['一致']} 个图斑。")
+        add_message_to_log(f"与变更调查不一致的面积为 {round(areas['不一致'], 2)} 亩，共有 {counts['不一致']} 个图斑。")
+        add_message_to_log(f"林地二级类变化为 {round(areas['林地二级类变化'], 2)} 亩，共有 {counts['林地二级类变化']} 个图斑。")
+        add_message_to_log(f"林地流入 {round(areas['林地流入'], 2)} 亩，共有 {counts['林地流入']} 个图斑。")
+        add_message_to_log(f"林地流出 {round(areas['林地流出'], 2)} 亩，共有 {counts['林地流出']} 个图斑。")
+        add_message_to_log(f"耕地流入 {round(areas['耕地流入'], 2)} 亩，共有 {counts['耕地流入']} 个图斑。")
+        add_message_to_log(f"耕地流出 {round(areas['耕地流出'], 2)} 亩，共有 {counts['耕地流出']} 个图斑。")
 
     add_message_to_log(f"已完成所有要素类的检查。")
