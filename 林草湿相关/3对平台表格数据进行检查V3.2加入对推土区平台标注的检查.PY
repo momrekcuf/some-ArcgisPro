@@ -189,7 +189,7 @@ def calculate_bg_hcyj_gfx(feature_class):
 
 # 函数：检查PDYJ与系统选择一致性以及相关一致性检查
 def update_bghcyj_gfx(feature_class):
-    with arcpy.da.UpdateCursor(feature_class, ["BGDLBM", "HSDLBM", "BGHCYJ_GFX", "BGGZJG", "BGLYJG", "PDYJ", "DLBM", "BGHS", "BGJZZT", "TTQ", "BGGZSM"]) as cursor:
+    with arcpy.da.UpdateCursor(feature_class, ["BGDLBM", "HSDLBM", "BGHCYJ_GFX", "BGGZJG", "BGLYJG", "PDYJ", "DLBM", "BGHS", "BGJZZT", "TTQ", "BGGZSM", "BGLYDL", "BGGZDL"]) as cursor:
         for row in cursor:
             bgdlbm_value = row[0]  # BGDLBM
             hsd_lbm_value = row[1]  # HSDLBM
@@ -202,6 +202,8 @@ def update_bghcyj_gfx(feature_class):
             bgjzzt_value = row[8]  # BGJZZT
             ttq_value = row[9]  # TTQ
             bggzsm_value = row[10]  # BGGZSM
+            bglydl_value = row[11]  # BGLYDL
+            bggzdl_value = row[12]  # BGGZDL
 
             # 1. 检查HSDLBM是否与筛选的BGDLBM不一致
             if bgdlbm_value and bgdlbm_value not in ["QT", "ZY"] and bgdlbm_value.strip():
@@ -234,6 +236,13 @@ def update_bghcyj_gfx(feature_class):
             # 6. 检查平台推土区是否按矢量备注
             if ttq_value == "TD" and (not bggzsm_value or bggzsm_value.strip() == ''):  # 检查TTQ字段是否为"TD",同时检查BGGZSM是否为空、空白或空格
                 bg_hcyj_gfx_value += "矢量标注为推土、平台未备注；"
+
+            # 7. 检查平台上是否填写有冲突
+            if bgdlbm_value and bgdlbm_value not in ["QT", "ZY"] and bgdlbm_value.strip():
+                if bglydl_value and bglydl_value.strip() and bglydl_value[:4] != bgdlbm_value:
+                    bg_hcyj_gfx_value += "平台上填写地类与三选一成果冲突；"
+                elif bggzdl_value and bggzdl_value.strip() and bggzdl_value[:4] != bgdlbm_value:
+                    bg_hcyj_gfx_value += "平台上填写地类与三选一成果冲突；"
 
             # 更新BGHCYJ_GFX和BGHS
             row[2] = bg_hcyj_gfx_value
